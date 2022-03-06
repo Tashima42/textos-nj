@@ -1,56 +1,137 @@
 import React, {useState, useEffect} from "react"
-import {Button, Autocomplete, TextField} from "@mui/material";
+import {Autocomplete, TextField} from "@mui/material";
+import LocalizationProvider from "@mui/lab/LocalizationProvider";
+import AdapterDateFns from "@mui/lab/AdapterDateFns"
+import {DatePicker} from "@mui/lab";
 import './App.css';
 import options from "./options"
 
 function App() {
-  const baseText = options.pedidos.textoBase
-  const [finalText, setFinalText] = useState(options.pedidos.textoBase)
+  const optionsKeys = Object.keys(options)
+  const [currentOption, setCurrentOption] = useState(optionsKeys[0])
+  const [baseText, setBaseText] = useState(options[currentOption].textoBase)
+  const [finalText, setFinalText] = useState(baseText)
   const [templateValues, setTemplateValues] = useState([])
+
+  useEffect(() => {
+    setBaseText(options[currentOption].textoBase)
+  }, [currentOption])
+
+  useEffect(() => {
+    setFinalText(baseText)
+  }, [baseText])
+
   return (
-    <div>
-      <h3>Pedidos</h3>
-      {createComponent()}
-      <textarea rows="10" cols="65" type="readonly" value={finalText} />
+    <div className="App">
+      <Autocomplete
+        className="autocomplete"
+        id="options"
+        options={optionsKeys}
+        sx={{width: 700}}
+        renderInput={(params) => <TextField {...params} label="Options" />}
+        onChange={selectCurrentOption}
+        defaultValue={optionsKeys[0]}
+      />
+      <div>
+        {createComponent()}
+      </div>
     </div >
   );
 
+  function selectCurrentOption(event, value) {
+    if (!value) return
+    setCurrentOption(value)
+  }
+
   function createComponent() {
-    const t = options.pedidos.opcoes.map((option, index) => {
-      const autoCompleteOptions = option.valores
-      const id = `${index + 1}${option.tipo === "multiplos-textos" ? "m" : ""}`
-      const component = <Autocomplete
-        id={id}
-        options={autoCompleteOptions}
-        sx={{width: 700}}
-        renderInput={(params) => <TextField {...params} label={index + 1} />}
-        key={index + 1}
-        onChange={s}
-      />
-      return component
+    const t = options[currentOption].opcoes.map((option, index) => {
+      if (option.tipo === "multiplos-textos") {
+        return option.valores.map((val, i) => {
+          const id = `${index + 1}.${i}`
+          return <Autocomplete
+            className="autocomplete"
+            id={id}
+            options={option.valores}
+            sx={{width: 700}}
+            renderInput={(params) => <TextField {...params} label={id} />}
+            key={id}
+            onChange={s}
+          />
+        })
+      } else if (option.tipo === "texto") {
+        const id = String(index + 1)
+        return <Autocomplete
+          className="autocomplete"
+          id={id}
+          options={option.valores}
+          sx={{width: 700}}
+          renderInput={(params) => <TextField {...params} label={id} />}
+          key={id}
+          onChange={s}
+        />
+      } else if (option.tipo === "data") {
+        const id = String(index + 1)
+        return <div className="date-picker">
+          <LocalizationProvider
+            key={id}
+            dateAdapter={AdapterDateFns} >
+            <DatePicker
+              label="Basic example"
+              onChange={value => {
+                const event = {target: {id: `${id}-option`}}
+                s(event, value)
+              }}
+              renderInput={(params) => <TextField {...params} />}
+            />
+          </LocalizationProvider >
+        </div >
+      }
     })
     return (
-      <form>
-        {t}
-      </form>
+      <div>
+        <h3>{options.nome}</h3>
+        <form>
+          {t}
+          <textarea rows="10" cols="65" type="readonly" value={finalText} />
+        </form>
+      </div>
     )
   }
+
   function s(event, value) {
     if (!value) return
     const id = event.target.id
     const index = id.split('-')[0]
-    console.log(id)
-    console.log(index)
-    templateValues[index] = value
+    const multIndex = index.split(".")
+    if (multIndex && multIndex.length > 1) {
+      if (!templateValues[multIndex[0]]) templateValues[multIndex[0]] = []
+      templateValues[multIndex[0]][multIndex[1]] = value
+    } else {
+      templateValues[index] = value
+    }
     setTemplateValues(templateValues)
     b()
   }
   function b() {
     let text = baseText
     templateValues.forEach((v, index) => {
+      if (Array.isArray(v)) {
+        let string = ""
+        v.forEach((va, i) => {
+          string = string + `${i + 1}) ${va} `
+        })
+        v = string
+      }
       text = text.replace(`/%${index}%/`, v)
     })
     setFinalText(text)
+  }
+  function dateParser(date) {
+    date = new Date()
+    const dia = date.getDate().toLocaleString('pt-BR', {minimumIntegerDigits: 2, useGrouping: false})
+    const mes = (date.getMonth() + 1).toLocaleString('pt-BR', {minimumIntegerDigits: 2, useGrouping: false})
+    const ano = date.getFullYear()
+    return `${dia}/${mes}/${ano}`
   }
 }
 
