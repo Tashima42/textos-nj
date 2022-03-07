@@ -1,8 +1,5 @@
 import React, {useState, useEffect} from "react"
 import {Autocomplete, TextField} from "@mui/material";
-import LocalizationProvider from "@mui/lab/LocalizationProvider";
-import AdapterDateFns from "@mui/lab/AdapterDateFns"
-import {DatePicker} from "@mui/lab";
 import './App.css';
 import options from "./options"
 
@@ -14,6 +11,7 @@ function App() {
   const [templateValues, setTemplateValues] = useState([])
 
   useEffect(() => {
+    setTemplateValues([])
     setBaseText(options[currentOption].textoBase)
   }, [currentOption])
 
@@ -32,6 +30,7 @@ function App() {
         onChange={selectCurrentOption}
         defaultValue={optionsKeys[0]}
       />
+      <h5>Complete os campos</h5>
       <div>
         {createComponent()}
       </div>
@@ -69,22 +68,9 @@ function App() {
           key={id}
           onChange={s}
         />
-      } else if (option.tipo === "data") {
-        const id = String(index + 1)
-        return <div className="date-picker">
-          <LocalizationProvider
-            key={id}
-            dateAdapter={AdapterDateFns} >
-            <DatePicker
-              label="Basic example"
-              onChange={value => {
-                const event = {target: {id: `${id}-option`}}
-                s(event, value)
-              }}
-              renderInput={(params) => <TextField {...params} />}
-            />
-          </LocalizationProvider >
-        </div >
+      } else if (option.tipo === "texto-input") {
+        const id = String((index + 1) + "-option")
+        return <TextField id={id} className="texto-input" label={id} variant="outlined" onChange={s} />
       }
     })
     return (
@@ -92,14 +78,17 @@ function App() {
         <h3>{options.nome}</h3>
         <form>
           {t}
-          <textarea rows="10" cols="65" type="readonly" value={finalText} />
+          <textarea className="final-text" type="readonly" value={finalText} />
         </form>
       </div>
     )
   }
 
   function s(event, value) {
-    if (!value) return
+    if (!value) {
+      value = event.target.value
+      if (!value) return
+    }
     const id = event.target.id
     const index = id.split('-')[0]
     const multIndex = index.split(".")
@@ -125,13 +114,6 @@ function App() {
       text = text.replace(`/%${index}%/`, v)
     })
     setFinalText(text)
-  }
-  function dateParser(date) {
-    date = new Date()
-    const dia = date.getDate().toLocaleString('pt-BR', {minimumIntegerDigits: 2, useGrouping: false})
-    const mes = (date.getMonth() + 1).toLocaleString('pt-BR', {minimumIntegerDigits: 2, useGrouping: false})
-    const ano = date.getFullYear()
-    return `${dia}/${mes}/${ano}`
   }
 }
 

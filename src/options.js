@@ -10,13 +10,13 @@ const options = {
         "tipo": "texto",
         "valores": ["admitido", "admitida"]
       },
-      {"tipo": "data"},
-      {"tipo": "data"},
+      {"tipo": "texto-input"},
+      {"tipo": "texto-input"},
       {
         "tipo": "texto",
         "valores": ["gerente", "caixa"]
       },
-      {"tipo": "data"},
+      {"tipo": "texto-input"},
       {
         "tipo": "multiplos-textos",
         "valores": [

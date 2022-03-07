@@ -1,8 +1,17 @@
-.autocomplete {
-  margin-bottom: 15px;
+.final-text {
+  border-color: #A3a6a6;
+  border-radius: 5px;
+  resize: none;
+  width: 693px;
+  height: 200px;
 }
 
-.date-picker {
+.autocomplete {
+  margin-bottom: 8px;
+  margin-top: 8px;
+}
+
+.texto-input {
   margin-bottom: 15px;
   margin-right: 15px;
 }
