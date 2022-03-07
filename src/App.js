@@ -70,8 +70,9 @@ function App() {
         />
       } else if (option.tipo === "texto-input") {
         const id = String((index + 1) + "-option")
-        return <TextField id={id} className="texto-input" label={id} variant="outlined" onChange={s} />
+        return <TextField id={id} key={id} className="texto-input" label={id} variant="outlined" onChange={s} />
       }
+      return (<div></div>)
     })
     return (
       <div>
