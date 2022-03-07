@@ -1,19 +1,19 @@
 import React, {useState, useEffect} from "react"
 import {Autocomplete, TextField} from "@mui/material";
 import './App.css';
-import options from "./options"
+import forms from "./forms"
 
 function App() {
-  const optionsKeys = Object.keys(options)
-  const [currentOption, setCurrentOption] = useState(optionsKeys[0])
-  const [baseText, setBaseText] = useState(options[currentOption].textoBase)
+  const formsKeys = Object.keys(forms)
+  const [currentForm, setCurrentForm] = useState(formsKeys[0])
+  const [baseText, setBaseText] = useState(forms[currentForm].textoBase)
   const [finalText, setFinalText] = useState(baseText)
   const [templateValues, setTemplateValues] = useState([])
 
   useEffect(() => {
     setTemplateValues([])
-    setBaseText(options[currentOption].textoBase)
-  }, [currentOption])
+    setBaseText(forms[currentForm].textoBase)
+  }, [currentForm])
 
   useEffect(() => {
     setFinalText(baseText)
@@ -23,96 +23,104 @@ function App() {
     <div className="App">
       <Autocomplete
         className="autocomplete"
-        id="options"
-        options={optionsKeys}
+        id="forms"
+        options={formsKeys}
         sx={{width: 700}}
-        renderInput={(params) => <TextField {...params} label="Options" />}
-        onChange={selectCurrentOption}
-        defaultValue={optionsKeys[0]}
+        renderInput={(params) => <TextField {...params} label="Forms" />}
+        onChange={selectCurrentForm}
+        defaultValue={formsKeys[0]}
       />
       <h5>Complete os campos</h5>
       <div>
-        {createComponent()}
+        {createForm()}
       </div>
     </div >
   );
 
-  function selectCurrentOption(event, value) {
+  function selectCurrentForm(_, value) {
     if (!value) return
-    setCurrentOption(value)
+    setCurrentForm(value)
   }
 
-  function createComponent() {
-    const t = options[currentOption].opcoes.map((option, index) => {
-      if (option.tipo === "multiplos-textos") {
-        return option.valores.map((val, i) => {
-          const id = `${index + 1}.${i}`
+  function createForm() {
+    const createdForms = forms[currentForm].opcoes.map((form, index) => {
+      if (form.tipo === "multiplos-textos") {
+        return form.valores.map((_, i) => {
+          const id = `${index + 1}.${i + 1}`
+          const label = form.legenda ? `${id} - ${form.legenda}` : id
           return <Autocomplete
             className="autocomplete"
             id={id}
-            options={option.valores}
+            options={form.valores}
             sx={{width: 700}}
-            renderInput={(params) => <TextField {...params} label={id} />}
+            renderInput={(params) => <TextField {...params} label={label} />}
             key={id}
-            onChange={s}
+            onChange={handleFormValuesChange}
           />
         })
-      } else if (option.tipo === "texto") {
+      } else if (form.tipo === "texto") {
         const id = String(index + 1)
+        const label = form.legenda ? `${id} - ${form.legenda}` : id
         return <Autocomplete
           className="autocomplete"
           id={id}
-          options={option.valores}
+          options={form.valores}
           sx={{width: 700}}
-          renderInput={(params) => <TextField {...params} label={id} />}
+          renderInput={(params) => <TextField {...params} label={label} />}
           key={id}
-          onChange={s}
+          onChange={handleFormValuesChange}
         />
-      } else if (option.tipo === "texto-input") {
+      } else if (form.tipo === "texto-input") {
         const id = String((index + 1) + "-option")
-        return <TextField id={id} key={id} className="texto-input" label={id} variant="outlined" onChange={s} />
+        const label = form.legenda ? `${index + 1} - ${form.legenda}` : id
+        return <TextField
+          id={id}
+          key={id}
+          className="texto-input"
+          label={label}
+          variant="outlined"
+          onChange={handleFormValuesChange}
+        />
       }
       return (<div></div>)
     })
     return (
-      <div>
-        <h3>{options.nome}</h3>
-        <form>
-          {t}
-          <textarea className="final-text" type="readonly" value={finalText} />
-        </form>
-      </div>
+      <form>
+        {createdForms}
+        <textarea className="final-text" type="readonly" value={finalText} />
+      </form>
     )
   }
 
-  function s(event, value) {
+  function handleFormValuesChange(event, value) {
     if (!value) {
       value = event.target.value
       if (!value) return
     }
     const id = event.target.id
     const index = id.split('-')[0]
-    const multIndex = index.split(".")
-    if (multIndex && multIndex.length > 1) {
-      if (!templateValues[multIndex[0]]) templateValues[multIndex[0]] = []
-      templateValues[multIndex[0]][multIndex[1]] = value
-    } else {
-      templateValues[index] = value
-    }
+    // Handle Itens with multiple valid options
+    const multipleItensIndex = index.split(".")
+    if (multipleItensIndex && multipleItensIndex.length > 1) {
+      if (!templateValues[multipleItensIndex[0]]) templateValues[multipleItensIndex[0]] = []
+      templateValues[multipleItensIndex[0]][multipleItensIndex[1]] = value
+    } else templateValues[index] = value
+
     setTemplateValues(templateValues)
-    b()
+    updateFinalText()
   }
-  function b() {
+  function updateFinalText() {
     let text = baseText
-    templateValues.forEach((v, index) => {
-      if (Array.isArray(v)) {
-        let string = ""
-        v.forEach((va, i) => {
-          string = string + `${i + 1}) ${va} `
+    templateValues.forEach((templateValue, index) => {
+      // Handle itens with multiple valid options
+      if (Array.isArray(templateValue)) {
+        let multipleItens = ""
+        templateValue.forEach((item, i) => {
+          multipleItens = multipleItens + `${i + 1}) ${item} `
         })
-        v = string
+        templateValue = multipleItens
       }
-      text = text.replace(`/%${index}%/`, v)
+      text = text.replace(`/%${index}%/`, templateValue)
     })
     setFinalText(text)
   }
