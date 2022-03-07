@@ -17,7 +17,7 @@ const options = {
 			},
 			{
 				"tipo": "texto",
-				"valores": ["gerente", "caixa"]
+				"valores": ["gerente", "caixa", "gerente geral", "supervisor de atendimento"]
 			},
 			{
 				"tipo": "texto-input"
