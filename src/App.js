@@ -116,7 +116,7 @@ function App() {
       if (Array.isArray(templateValue)) {
         let multipleItens = ""
         templateValue.forEach((item, i) => {
-          multipleItens = multipleItens + `${i + 1}) ${item} `
+          multipleItens = multipleItens + `${i}) ${item} `
         })
         templateValue = multipleItens
       }
